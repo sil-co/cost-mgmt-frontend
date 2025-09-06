@@ -495,39 +495,6 @@ const App: React.FC = () => {
                 {txns.length === 0 ? (
                   <EmptyState>No transactions this month.</EmptyState>
                 ) : (
-                  // <Table>
-                  //   <thead>
-                  //     <tr>
-                  //       <th style={{ width: 120 }}>Date</th>
-                  //       <th>Category</th>
-                  //       <th>Note</th>
-                  //       <th style={{ textAlign: "right", width: 140 }}>Amount</th>
-                  //       <th style={{ width: 60 }}></th>
-                  //     </tr>
-                  //   </thead>
-                  //   <tbody>
-                  //     {txns
-                  //       .slice()
-                  //       .sort((a, b) => (a.date < b.date ? 1 : -1))
-                  //       .map((t) => {
-                  //         return (
-                  //           <tr key={t.id}>
-                  //             <td>{new Date(t.date).toLocaleDateString()}</td>
-                  //             <td>
-                  //               <Badge color={categoryMap[t.categoryId]?.color}>
-                  //                 {categoryMap[t.categoryId]?.name || "Unknown"}
-                  //               </Badge>
-                  //             </td>
-                  //             <td>{t.note || ""}</td>
-                  //             <td style={{ textAlign: "right", fontWeight: 700 }}>{formatCurrency(t.amount, currency)}</td>
-                  //             <td>
-                  //               <Button variant="ghost" onClick={() => handleDelete(t.id)}>🗑️</Button>
-                  //             </td>
-                  //           </tr>
-                  //         )
-                  //       })}
-                  //   </tbody>
-                  // </Table>
                   <SortableTable txns={txns} categoryMap={categoryMap} currency={currency} formatCurrency={formatCurrency} handleDelete={handleDelete} Badge={Badge} Button={Button} />
                 )}
               </CardBody>
