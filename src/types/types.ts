@@ -2,7 +2,7 @@
 export type Category = {
   id: string;
   name: string;
-  color: string; 
+  color: string;
 };
 
 export type Transaction = {
@@ -31,4 +31,9 @@ export interface TableProps {
   handleDelete: (id: string) => void;
   Badge: React.FC<{ color: string; children: React.ReactNode }>;
   Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>>;
+}
+
+export interface CategoryProps {
+  handleAdd: (form: { name: string, color: string }) => Promise<void>;
+  categories: Category[]
 }

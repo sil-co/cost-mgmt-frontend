@@ -9,6 +9,7 @@ import type { Category, Budget, Transaction } from './types/types';
 import { api } from './api/api';
 import { startOfMonthISO, endOfMonthISO, formatCurrency, yyyyMM } from './utility/utility';
 import SortableTable from './components/SortableTable';
+import CategoryManager from './components/CategoryManager';
 
 /**
  * Cost Management App (Single-file)
@@ -22,7 +23,7 @@ import SortableTable from './components/SortableTable';
 // ------------------------------
 // THEME & GLOBAL STYLES
 // ------------------------------
-const theme: DefaultTheme = {
+export const theme: DefaultTheme = {
   bg: "#0f1222",
   panel: "#171a2e",
   panelSoft: "#1d2140",
@@ -253,7 +254,7 @@ const App: React.FC = () => {
       setLoading(true); setError(null);
       try {
         const [cats, bs] = await Promise.all([
-          api.getCategories(),
+          api.getCategories(authToken),
           api.getBudgets(authToken, month),
         ]);
         if (!mounted) return;
@@ -299,6 +300,20 @@ const App: React.FC = () => {
       setLoggedIn(true);
     } catch (err: any) {
       setError(err?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAddCategory(form: { name: string, color: string }) {
+    try {
+      setError(null); setLoading(true);
+      await api.createCategory(authToken, form);
+      const list = await api.getCategories(authToken);
+      setCategories(list);
+    } catch (e: any) {
+      setError(e?.message || "Failed to add transaction");
+      // setError("Failed to add transaction");
     } finally {
       setLoading(false);
     }
@@ -395,6 +410,36 @@ const App: React.FC = () => {
             </Card>
           )}
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Overview</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <StatGrid>
+                <Stat>
+                  <Text>Total Spent</Text>
+                  <strong style={{ fontSize: 22 }}>{formatCurrency(totals.total, currency)}</strong>
+                </Stat>
+                <Stat>
+                  <Text>Top Category</Text>
+                  <div>
+                    {topCategoryId ? (
+                      <Badge color={categoryMap[topCategoryId]?.color}>
+                        {categoryMap[topCategoryId]?.name || "Unknown"}
+                      </Badge>
+                    ) : (
+                      <Text>—</Text>
+                    )}
+                  </div>
+                </Stat>
+                <Stat>
+                  <Text>Transactions</Text>
+                  <strong style={{ fontSize: 22 }}>{txns.length}</strong>
+                </Stat>
+              </StatGrid>
+            </CardBody>
+          </Card>
+
           <Grid>
             {/* LEFT: TRANSACTIONS */}
             <Card>
@@ -457,35 +502,10 @@ const App: React.FC = () => {
               </CardBody>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Overview</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <StatGrid>
-                  <Stat>
-                    <Text>Total Spent</Text>
-                    <strong style={{ fontSize: 22 }}>{formatCurrency(totals.total, currency)}</strong>
-                  </Stat>
-                  <Stat>
-                    <Text>Top Category</Text>
-                    <div>
-                      {topCategoryId ? (
-                        <Badge color={categoryMap[topCategoryId]?.color}>
-                          {categoryMap[topCategoryId]?.name || "Unknown"}
-                        </Badge>
-                      ) : (
-                        <Text>—</Text>
-                      )}
-                    </div>
-                  </Stat>
-                  <Stat>
-                    <Text>Transactions</Text>
-                    <strong style={{ fontSize: 22 }}>{txns.length}</strong>
-                  </Stat>
-                </StatGrid>
-              </CardBody>
-            </Card>
+            <CategoryManager
+              handleAdd={handleAddCategory}
+              categories={categories}
+            />
 
             <Card>
               <CardHeader>

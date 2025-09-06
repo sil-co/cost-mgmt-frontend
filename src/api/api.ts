@@ -21,14 +21,32 @@ export const api = {
     if (!res.ok) throw new Error("auth token expired");
     return res.json();
   },
-  async getCategories(): Promise<Category[]> {
-    const res = await fetch(`${BASE_URL}/categories`);
+  async getCategories(authToken: string): Promise<Category[]> {
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
+    const res = await fetch(`${BASE_URL}/categories`, {
+      headers: authToken ? { "X-Auth-Token": authToken } : {},
+    });
     if (!res.ok) throw new Error("Failed to fetch categories");
     return res.json();
   },
+  async createCategory(authToken: string, input: { name: string; color: string }): Promise<Category> {
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
+    const res = await fetch(`${BASE_URL}/categories`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(authToken ? {
+          "X-Auth-Token": authToken,
+        } : {}),
+      },
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) throw new Error("Failed to create category");
+    return res.json();
+  },
   async getBudgets(authToken: string, month: string): Promise<Budget[]> {
-    console.log({authToken})
-    if (authToken == "") { throw new Error("No auth token: you need to sign"); };
+    console.log({ authToken })
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
     const res = await fetch(`${BASE_URL}/budgets?month=${month}`, {
       headers: authToken ? { "X-Auth-Token": authToken } : {},
     });
@@ -48,7 +66,7 @@ export const api = {
     return res.json();
   },
   async getTransactions(authToken: string, fromISO: string, toISO: string): Promise<Transaction[]> {
-    if (authToken == "") { throw new Error("No auth token: you need to sign"); };
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
     // const fromDate = fromISO.split("T")[0];
     // const toDate = toISO.split("T")[0];
     const fromDate = toLocalYMD(fromISO);
@@ -60,7 +78,7 @@ export const api = {
     return res.json();
   },
   async createTransaction(authToken: string, input: Omit<Transaction, "id">): Promise<Transaction> {
-    if (authToken == "") { throw new Error("No auth token: you need to sign"); };
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
     const res = await fetch(`${BASE_URL}/transactions`, {
       method: "POST",
       headers: {
@@ -73,8 +91,8 @@ export const api = {
     return res.json();
   },
   async deleteTransaction(authToken: string, id: string): Promise<void> {
-    if (authToken == "") { throw new Error("No auth token: you need to sign"); };
-    const res = await fetch(`${BASE_URL}/transactions/${id}`, { 
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
+    const res = await fetch(`${BASE_URL}/transactions/${id}`, {
       method: "DELETE",
       headers: authToken ? { "X-Auth-Token": authToken } : {},
     });
