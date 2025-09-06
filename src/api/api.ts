@@ -1,4 +1,4 @@
-import type { Category, Budget, Transaction } from "../types/types";
+import type { Category, Transaction } from "../types/types";
 import { toLocalYMD } from "../utility/utility";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -13,7 +13,17 @@ export const api = {
     if (!res.ok) throw new Error("Login failed");
     return res.json();
   },
+  async signUp(username: string, password: string): Promise<{token: string}> {
+    const res = await fetch(`${BASE_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: username, password }),
+    });
+    if (!res.ok) throw new Error("Sign up failed. Try it another name!");
+    return res.json();
+  },
   async validate(authToken: string): Promise<{ valid: boolean, userId: number }> {
+    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
     const res = await fetch(`${BASE_URL}/auth/validate`, {
       method: "GET",
       headers: authToken ? { "X-Auth-Token": authToken } : {},
@@ -44,17 +54,17 @@ export const api = {
     if (!res.ok) throw new Error("Failed to create category");
     return res.json();
   },
-  async getBudgets(authToken: string, month: string): Promise<Budget[]> {
-    console.log({ authToken })
-    if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
-    const res = await fetch(`${BASE_URL}/budgets?month=${month}`, {
-      headers: authToken ? { "X-Auth-Token": authToken } : {},
-    });
-    if (!res.ok) throw new Error("Failed to fetch budgets");
-    return res.json();
-  },
-  async upsertBudget(authToken: string, input: Partial<Budget> & { categoryId: string; month: string }): Promise<Budget> {
-    const res = await fetch(`${BASE_URL}/budgets`, {
+  // async getBudgets(authToken: string, month: string): Promise<Budget[]> {
+  //   console.log({ authToken })
+  //   if (authToken == "") { throw new Error("No auth token: you need to sign in"); };
+  //   const res = await fetch(`${BASE_URL}/budgets?month=${month}`, {
+  //     headers: authToken ? { "X-Auth-Token": authToken } : {},
+  //   });
+  //   if (!res.ok) throw new Error("Failed to fetch budgets");
+  //   return res.json();
+  // },
+  async upsertCategoryBudget(authToken: string, input: Partial<Category> & { categoryId: string; }): Promise<Category> {
+    const res = await fetch(`${BASE_URL}/categories/${input.categoryId}/budget`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

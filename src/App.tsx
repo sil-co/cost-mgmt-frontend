@@ -2,14 +2,16 @@
 // import viteLogo from '/vite.svg';
 import './App.css';
 import React, { useEffect, useMemo, useState } from "react";
-import styled, { ThemeProvider, createGlobalStyle } from "styled-components";
+import { ThemeProvider, createGlobalStyle } from "styled-components";
 import type { DefaultTheme } from 'styled-components/dist/types';
 import { Login } from './components/Login';
-import type { Category, Budget, Transaction } from './types/types';
+import type { Category, Transaction } from './types/types';
 import { api } from './api/api';
 import { startOfMonthISO, endOfMonthISO, formatCurrency, yyyyMM } from './utility/utility';
 import SortableTable from './components/SortableTable';
 import CategoryManager from './components/CategoryManager';
+import * as SC from './components/StyledComponents';
+import BudgetInlineEditor from './components/BudgetInlineEditor';
 
 /**
  * Cost Management App (Single-file)
@@ -48,142 +50,10 @@ const Global = createGlobalStyle`
   input, select, button, textarea { font-family: inherit; font-size: 14px; }
 `;
 
-// ------------------------------
-// LAYOUT STYLES
-// ------------------------------
-const Shell = styled.div`
-  display: grid; grid-template-rows: auto 1fr; min-height: 100vh;
-`;
-
-const Header = styled.header`
-  position: sticky; top: 0; z-index: 10;
-  background: ${p => p.theme.panel};
-  border-bottom: 1px solid ${p => p.theme.border};
-  box-shadow: 0 10px 30px ${p => p.theme.shadow};
-`;
-
-const HeaderInner = styled.div`
-  max-width: 1100px; margin: 0 auto; padding: 14px 18px;
-  display: flex; gap: 14px; align-items: center; justify-content: space-between;
-`;
-
-const Title = styled.h1`
-  font-size: 18px; margin: 0; font-weight: 700; letter-spacing: 0.4px;
-`;
-
-const RightItem = styled.div`
-  display: flex;
-
-`;
-
-const MonthPickerWrap = styled.div`
-  display: flex; gap: 8px; align-items: center;
-`;
-
-const MonthInput = styled.input`
-  background: ${p => p.theme.panelSoft}; color: ${p => p.theme.text};
-  padding: 8px 10px; border-radius: 10px; border: 1px solid ${p => p.theme.border};
-`;
-
-const Container = styled.main`
-  max-width: 1100px; margin: 18px auto; padding: 0 18px 80px; width: 100%;
-`;
-
-const Grid = styled.div`
-  display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px;
-  @media (max-width: 980px) { grid-template-columns: 1fr; }
-`;
-
-const Card = styled.section`
-  background: ${p => p.theme.panel}; border: 1px solid ${p => p.theme.border};
-  border-radius: 16px; box-shadow: 0 10px 30px ${p => p.theme.shadow};
-  margin-bottom: 18px;
-`;
-
-const CardHeader = styled.div`
-  padding: 14px 16px; border-bottom: 1px solid ${p => p.theme.border};
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-`;
-
-const CardTitle = styled.h2`
-  font-size: 14px; margin: 0; color: ${p => p.theme.textDim}; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
-`;
-
-const CardBody = styled.div`
-  padding: 16px;
-`;
-
-const Row = styled.div`
-  display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; align-items: center;
-`;
-
-const Button = styled.button<{ variant?: "primary" | "ghost" | "danger" }>`
-  padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; cursor: pointer;
-  background: ${p => (p.variant === "primary" ? p.theme.primary : p.variant === "danger" ? p.theme.danger : p.theme.panelSoft)};
-  color: ${p => (p.variant ? "#0c0c17" : p.theme.text)};
-  border-color: ${p => (p.variant ? "transparent" : p.theme.border)};
-  font-weight: 600; letter-spacing: .2px;
-  transition: transform .04s ease, filter .2s ease;
-  &:active { transform: translateY(1px); }
-  &:hover { filter: brightness(1.05); }
-`;
-
-const Input = styled.input`
-  width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid ${p => p.theme.border};
-  background: ${p => p.theme.panelSoft}; color: ${p => p.theme.text};
-`;
-
-const Select = styled.select`
-  width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid ${p => p.theme.border};
-  background: ${p => p.theme.panelSoft}; color: ${p => p.theme.text};
-`;
-
-const Text = styled.p`
-  margin: 0; color: ${p => p.theme.textDim}; font-size: 13px;
-`;
-
-const StatGrid = styled.div`
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-  @media (max-width: 600px) { grid-template-columns: 1fr; }
-`;
-
-const Stat = styled.div`
-  background: ${p => p.theme.panelSoft}; border: 1px solid ${p => p.theme.border};
-  border-radius: 12px; padding: 12px; display: grid; gap: 6px;
-`;
-
-const ProgressWrap = styled.div`
-  height: 8px; background: #0b0d1a; border: 1px solid ${p => p.theme.border}; border-radius: 999px; overflow: hidden;
-`;
-
-const ProgressBar = styled.div<{ ratio: number; color?: string }>`
-  width: ${p => Math.min(100, Math.max(0, p.ratio * 100)).toFixed(1)}%;
-  height: 100%; background: ${p => p.color || p.theme.primary}; transition: width .4s ease;
-`;
-
-const Badge = styled.span<{ color?: string }>`
-  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
-  background: ${p => p.color ? p.color + "22" : p.theme.panelSoft};
-  border: 1px solid ${p => p.theme.border}; color: ${p => p.theme.text}; font-weight: 600; font-size: 12px;
-`;
-
-// const Table = styled.table`
-//   width: 100%; border-collapse: collapse; font-size: 14px;
-//   th, td { padding: 10px 8px; border-bottom: 1px solid ${p => p.theme.border}; text-align: left; }
-//   tbody tr:hover { background: ${p => p.theme.panelSoft}; }
-// `;
-
-const EmptyState = styled.div`
-  text-align: center; padding: 20px; color: ${p => p.theme.textDim};
-`;
-
-// ------------------------------
-// MAIN APP
-// ------------------------------
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
+  // const [budgets, setBudgets] = useState<Budget[]>([]);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,13 +61,11 @@ const App: React.FC = () => {
     return localStorage.getItem("authToken") ?? "";
   });
 
-
   const [month, setMonth] = useState(() => {
     const now = new Date();
     return yyyyMM(now);
   });
 
-  // form state
   const [form, setForm] = useState<{ date: string; amount: string; categoryId: string; note: string }>({
     date: new Date().toISOString().slice(0, 10),
     amount: "",
@@ -211,7 +79,7 @@ const App: React.FC = () => {
 
   // derived maps
   const categoryMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories]);
-  const budgetByCategory = useMemo(() => Object.fromEntries(budgets.map(b => [b.categoryId, b])), [budgets]);
+  // const budgetByCategory = useMemo(() => Object.fromEntries(budgets.map(b => [b.categoryId, b])), [budgets]);
 
   const totals = useMemo(() => {
     const byCategory = new Map<string, number>();
@@ -253,13 +121,13 @@ const App: React.FC = () => {
     (async () => {
       setLoading(true); setError(null);
       try {
-        const [cats, bs] = await Promise.all([
+        const [cats] = await Promise.all([
           api.getCategories(authToken),
-          api.getBudgets(authToken, month),
+          // api.getBudgets(authToken, month),
         ]);
         if (!mounted) return;
         setCategories(cats);
-        setBudgets(bs);
+        // setBudgets(bs);
       } catch (e: any) {
         setError(e?.message || "Failed to load");
         // setError("Failed to load");
@@ -300,6 +168,20 @@ const App: React.FC = () => {
       setLoggedIn(true);
     } catch (err: any) {
       setError(err?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSignUp(name: string, password: string) {
+    try {
+      setLoading(true); setError(null);
+      const { token } = await api.signUp(name, password);
+      localStorage.setItem("authToken", token);
+      setAuthToken(token);
+      setLoggedIn(true);
+    } catch (e: any) {
+      setError(e?.message || "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -357,15 +239,17 @@ const App: React.FC = () => {
     }
   }
 
-  async function handleBudgetSave(categoryId: string, amount: number) {
+  async function handleBudgetSave(categoryId: string, budget: number) {
     try {
       setLoading(true); setError(null);
-      const saved = await api.upsertBudget(authToken, { categoryId, month, amount });
-      setBudgets(prev => {
-        const idx = prev.findIndex(b => b.categoryId === categoryId && b.month === month);
-        if (idx >= 0) { const clone = [...prev]; clone[idx] = saved; return clone; }
-        return [saved, ...prev];
-      });
+      await api.upsertCategoryBudget(authToken, { categoryId, budget });
+      // setBudgets(prev => {
+      //   const idx = prev.findIndex(b => b.categoryId === categoryId && b.month === month);
+      //   if (idx >= 0) { const clone = [...prev]; clone[idx] = saved; return clone; }
+      //   return [saved, ...prev];
+      // });
+      const list = await api.getCategories(authToken);
+      setCategories(list);
     } catch (e: any) {
       // setError(e?.message || "Failed to save budget");
       setError("Failed to save budget");
@@ -379,79 +263,79 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <Global />
-      <Shell>
-        <Header>
-          <HeaderInner>
-            <Title>💸 Cost Manager</Title>
-            <RightItem>
-              <MonthPickerWrap>
-                <Text>Month</Text>
-                <MonthInput
+      <SC.Shell>
+        <SC.Header>
+          <SC.HeaderInner>
+            <SC.Title>💸 Cost Manager</SC.Title>
+            <SC.RightItem>
+              <SC.MonthPickerWrap>
+                <SC.Text>Month</SC.Text>
+                <SC.MonthInput
                   type="month"
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
                 />
-              </MonthPickerWrap>
+              </SC.MonthPickerWrap>
               {!loggedIn ? (
-                <Login handleLogin={handleLogin} />
+                <Login handleLogin={handleLogin} handleSignUp={handleSignUp} />
               ) : (
                 <></>
               )}
-            </RightItem>
-          </HeaderInner>
-        </Header>
+            </SC.RightItem>
+          </SC.HeaderInner>
+        </SC.Header>
 
-        <Container>
+        <SC.Container>
           {error && (
-            <Card style={{ borderColor: theme.danger }}>
-              <CardBody>
-                <Text style={{ color: theme.danger }}>Error: {error}</Text>
-              </CardBody>
-            </Card>
+            <SC.Card style={{ borderColor: theme.danger }}>
+              <SC.CardBody>
+                <SC.Text style={{ color: theme.danger }}>Error: {error}</SC.Text>
+              </SC.CardBody>
+            </SC.Card>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Overview</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <StatGrid>
-                <Stat>
-                  <Text>Total Spent</Text>
+          <SC.Card>
+            <SC.CardHeader>
+              <SC.CardTitle>Monthly Overview</SC.CardTitle>
+            </SC.CardHeader>
+            <SC.CardBody>
+              <SC.StatGrid>
+                <SC.Stat>
+                  <SC.Text>Total Spent</SC.Text>
                   <strong style={{ fontSize: 22 }}>{formatCurrency(totals.total, currency)}</strong>
-                </Stat>
-                <Stat>
-                  <Text>Top Category</Text>
+                </SC.Stat>
+                <SC.Stat>
+                  <SC.Text>Top Category</SC.Text>
                   <div>
                     {topCategoryId ? (
-                      <Badge color={categoryMap[topCategoryId]?.color}>
+                      <SC.Badge color={categoryMap[topCategoryId]?.color}>
                         {categoryMap[topCategoryId]?.name || "Unknown"}
-                      </Badge>
+                      </SC.Badge>
                     ) : (
-                      <Text>—</Text>
+                      <SC.Text>—</SC.Text>
                     )}
                   </div>
-                </Stat>
-                <Stat>
-                  <Text>Transactions</Text>
+                </SC.Stat>
+                <SC.Stat>
+                  <SC.Text>Transactions</SC.Text>
                   <strong style={{ fontSize: 22 }}>{txns.length}</strong>
-                </Stat>
-              </StatGrid>
-            </CardBody>
-          </Card>
+                </SC.Stat>
+              </SC.StatGrid>
+            </SC.CardBody>
+          </SC.Card>
 
-          <Grid>
+          <SC.Grid>
             {/* LEFT: TRANSACTIONS */}
-            <Card>
-              <CardHeader>
-                <CardTitle>New Expense</CardTitle>
-              </CardHeader>
-              <CardBody>
+            <SC.Card>
+              <SC.CardHeader>
+                <SC.CardTitle>New Expense</SC.CardTitle>
+              </SC.CardHeader>
+              <SC.CardBody>
                 <form onSubmit={handleAdd}>
-                  <Row style={{ marginBottom: 10 }}>
+                  <SC.Row style={{ marginBottom: 10 }}>
                     <div style={{ gridColumn: "span 3" }}>
-                      <Text>Date</Text>
-                      <Input
+                      <SC.Text>Date</SC.Text>
+                      <SC.Input
                         type="date"
                         value={form.date}
                         onChange={(e) => setForm({ ...form, date: e.target.value })}
@@ -459,8 +343,8 @@ const App: React.FC = () => {
                       />
                     </div>
                     <div style={{ gridColumn: "span 3" }}>
-                      <Text>Amount</Text>
-                      <Input
+                      <SC.Text>Amount</SC.Text>
+                      <SC.Input
                         type="number"
                         step="1"
                         inputMode="numeric"
@@ -471,8 +355,8 @@ const App: React.FC = () => {
                       />
                     </div>
                     <div style={{ gridColumn: "span 3" }}>
-                      <Text>Category</Text>
-                      <Select
+                      <SC.Text>Category</SC.Text>
+                      <SC.Select
                         value={form.categoryId || categories[0]?.id || ""}
                         onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                         required
@@ -480,127 +364,125 @@ const App: React.FC = () => {
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
-                      </Select>
+                      </SC.Select>
                     </div>
                     <div style={{ gridColumn: "span 3" }}>
-                      <Text>Note</Text>
-                      <Input
+                      <SC.Text>Note</SC.Text>
+                      <SC.Input
                         placeholder="Optional note"
                         value={form.note}
                         onChange={(e) => setForm({ ...form, note: e.target.value })}
                       />
                     </div>
-                  </Row>
-                  <Row>
+                  </SC.Row>
+                  <SC.Row>
                     <div style={{ gridColumn: "span 12", display: "flex", justifyContent: "flex-end" }}>
-                      <Button type="submit" variant="primary" disabled={loading}>
+                      <SC.Button type="submit" variant="primary" disabled={loading}>
                         {loading ? "Saving..." : "Add Expense"}
-                      </Button>
+                      </SC.Button>
                     </div>
-                  </Row>
+                  </SC.Row>
                 </form>
-              </CardBody>
-            </Card>
+              </SC.CardBody>
+            </SC.Card>
 
             <CategoryManager
               handleAdd={handleAddCategory}
-              categories={categories}
             />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Transactions</CardTitle>
-              </CardHeader>
-              <CardBody>
+            <SC.Card>
+              <SC.CardHeader>
+                <SC.CardTitle>Transactions</SC.CardTitle>
+              </SC.CardHeader>
+              <SC.CardBody>
                 {txns.length === 0 ? (
-                  <EmptyState>No transactions this month.</EmptyState>
+                  <SC.EmptyState>No transactions this month.</SC.EmptyState>
                 ) : (
-                  <SortableTable txns={txns} categoryMap={categoryMap} currency={currency} formatCurrency={formatCurrency} handleDelete={handleDelete} Badge={Badge} Button={Button} />
+                  <SortableTable txns={txns} categoryMap={categoryMap} currency={currency} formatCurrency={formatCurrency} handleDelete={handleDelete} Badge={SC.Badge} Button={SC.Button} />
                 )}
-              </CardBody>
-            </Card>
+              </SC.CardBody>
+            </SC.Card>
 
             {/* RIGHT: BUDGETS */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Budgets ({month})</CardTitle>
-              </CardHeader>
-              <CardBody>
+            <SC.Card>
+              <SC.CardHeader>
+                <SC.CardTitle>Budgets ({month})</SC.CardTitle>
+              </SC.CardHeader>
+              <SC.CardBody>
                 <div style={{ display: "grid", gap: 12 }}>
-                  {categories.length === 0 && <Text>No categories.</Text>}
+                  {categories.length === 0 && <SC.Text>No categories.</SC.Text>}
                   {categories.map((c) => {
                     const spent = totals.byCategory.get(c.id) || 0;
-                    const budget = budgetByCategory[c.id]?.amount || 0;
-                    const ratio = budget > 0 ? spent / budget : 0;
+                    // const budget = budgetByCategory[c.id]?.amount || 0;
+                    const ratio = c.budget > 0 ? spent / c.budget : 0;
                     return (
                       <div key={c.id} style={{ background: theme.panelSoft, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 12 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <Badge color={c.color}>{c.name}</Badge>
-                            <Text>
-                              {formatCurrency(spent, currency)} / {formatCurrency(budget, currency)}
-                            </Text>
+                            <SC.Badge color={c.color}>{c.name}</SC.Badge>
+                            <SC.Text>
+                              {formatCurrency(spent, currency)} / {formatCurrency(c.budget, currency)}
+                            </SC.Text>
                           </div>
                           <BudgetInlineEditor
-                            initial={budget}
+                            initial={c.budget}
                             onSave={(val) => handleBudgetSave(c.id, val)}
                             disabled={loading}
                           />
                         </div>
-                        <ProgressWrap>
-                          <ProgressBar ratio={ratio} color={ratio > 1 ? theme.danger : c.color || theme.primary} />
-                        </ProgressWrap>
+                        <SC.ProgressWrap>
+                          <SC.ProgressBar ratio={ratio} color={ratio > 1 ? theme.danger : c.color || theme.primary} />
+                        </SC.ProgressWrap>
                         {ratio > 1 && (
-                          <Text style={{ color: theme.warning, marginTop: 6 }}>⚠️ Over budget by {formatCurrency(spent - budget, currency)}</Text>
+                          <SC.Text style={{ color: theme.warning, marginTop: 6 }}>⚠️ Over budget by {formatCurrency(spent - c.budget, currency)}</SC.Text>
                         )}
                       </div>
                     );
                   })}
                 </div>
-              </CardBody>
-            </Card>
-          </Grid>
-        </Container>
-      </Shell>
+              </SC.CardBody>
+            </SC.Card>
+          </SC.Grid>
+        </SC.Container>
+      </SC.Shell>
     </ThemeProvider>
   );
-};
-
+}
 export default App;
 
 // ------------------------------
 // INLINE BUDGET EDITOR COMPONENT
 // ------------------------------
-const BudgetInlineWrap = styled.div`
-  display: inline-flex; gap: 8px; align-items: center;
-`;
+// const BudgetInlineWrap = styled.div`
+//   display: inline-flex; gap: 8px; align-items: center;
+// `;
 
-const BudgetInput = styled(Input)`
-  width: 110px;
-`;
+// const BudgetInput = styled(Input)`
+//   width: 110px;
+// `;
 
-const BudgetInlineEditor: React.FC<{ initial: number; onSave: (val: number) => void; disabled?: boolean }> = ({ initial, onSave, disabled }) => {
-  const [editing, setEditing] = useState(false);
-  const [val, setVal] = useState(String(initial ?? 0));
+// const BudgetInlineEditor: React.FC<{ initial: number; onSave: (val: number) => void; disabled?: boolean }> = ({ initial, onSave, disabled }) => {
+//   const [editing, setEditing] = useState(false);
+//   const [val, setVal] = useState(String(initial ?? 0));
 
-  useEffect(() => { setVal(String(initial ?? 0)); }, [initial]);
+//   useEffect(() => { setVal(String(initial ?? 0)); }, [initial]);
 
-  if (!editing) {
-    return (
-      <BudgetInlineWrap>
-        <Button onClick={() => setEditing(true)} disabled={disabled}>Edit Budget</Button>
-      </BudgetInlineWrap>
-    );
-  }
-  return (
-    <BudgetInlineWrap>
-      <BudgetInput type="number" inputMode="numeric" value={val} onChange={e => setVal(e.target.value)} />
-      <Button
-        variant="primary"
-        onClick={() => { onSave(Number(val || 0)); setEditing(false); }}
-        disabled={disabled}
-      >Save</Button>
-      <Button onClick={() => { setVal(String(initial ?? 0)); setEditing(false); }} disabled={disabled}>Cancel</Button>
-    </BudgetInlineWrap>
-  );
-};
+//   if (!editing) {
+//     return (
+//       <BudgetInlineWrap>
+//         <Button onClick={() => setEditing(true)} disabled={disabled}>Edit Budget</Button>
+//       </BudgetInlineWrap>
+//     );
+//   }
+//   return (
+//     <BudgetInlineWrap>
+//       <BudgetInput type="number" inputMode="numeric" value={val} onChange={e => setVal(e.target.value)} />
+//       <Button
+//         variant="primary"
+//         onClick={() => { onSave(Number(val || 0)); setEditing(false); }}
+//         disabled={disabled}
+//       >Save</Button>
+//       <Button onClick={() => { setVal(String(initial ?? 0)); setEditing(false); }} disabled={disabled}>Cancel</Button>
+//     </BudgetInlineWrap>
+//   );
+// };

@@ -3,6 +3,7 @@ export type Category = {
   id: string;
   name: string;
   color: string;
+  budget: number;
 };
 
 export type Transaction = {
@@ -13,12 +14,12 @@ export type Transaction = {
   note?: string;
 };
 
-export type Budget = {
-  id: string;
-  categoryId: string;
-  month: string; // YYYY-MM
-  amount: number; // monthly budget for that category
-};
+// export type Budget = {
+//   id: string;
+//   categoryId: string;
+//   month: string; // YYYY-MM
+//   amount: number; // monthly budget for that category
+// };
 
 export type SortKey = "date" | "category" | "note" | "amount";
 export type SortOrder = "asc" | "desc";
@@ -35,5 +36,4 @@ export interface TableProps {
 
 export interface CategoryProps {
   handleAdd: (form: { name: string, color: string }) => Promise<void>;
-  categories: Category[]
 }

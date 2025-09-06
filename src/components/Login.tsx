@@ -24,7 +24,7 @@ const LoginWrapper = styled.div`
   z-index: 900;
   background: #1d1f2f;
   border-radius: 12px;
-  padding: 40px 20px;
+  padding: 40px 20px 20px;
   width: 280px;
   box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
   color: #fff;
@@ -76,46 +76,72 @@ const CloseButton = styled.button`
   }
 `;
 
-interface LoginProps {
-    handleLogin: (name: string, password: string) => void;
+const SignUpButton = styled.button`
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  text-decoration: underline;
+  color: #00c3ff;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+`;
+
+interface AuthProps {
+  handleLogin: (name: string, password: string) => void;
+  handleSignUp: (name: string, password: string) => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ handleLogin }) => {
-    const [showForm, setShowForm] = useState(false);
-    const [name, setName] = useState("");
-    const [password, setPassword] = useState("");
+export const Login: React.FC<AuthProps> = ({ handleLogin, handleSignUp }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [signUp, setSignUp] = useState(false);
 
-    function onSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        handleLogin(name, password);
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (signUp) {
+      handleSignUp(name, password);
+    } else {
+      handleLogin(name, password);
     }
+  }
 
-    return (
-        <>
-            <LoginButton onClick={() => setShowForm(true)}>Sign In</LoginButton>
+  return (
+    <>
+      <LoginButton onClick={() => setShowForm(true)}>
+        {signUp ? "Sign Up" : "Sign In"}
+      </LoginButton>
 
-            {showForm && (
-                <LoginWrapper>
-                    <CloseButton onClick={() => setShowForm(false)}>×</CloseButton>
-                    <form onSubmit={onSubmit}>
-                        <Input
-                            type="text"
-                            placeholder="Name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                        />
-                        <Input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                        <Button type="submit">Sign In</Button>
-                    </form>
-                </LoginWrapper>
-            )}
-        </>
-    );
+      {showForm && (
+        <LoginWrapper>
+          <CloseButton onClick={() => setShowForm(false)}>×</CloseButton>
+          <form onSubmit={onSubmit}>
+            <Input
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <Button type="submit">
+              {signUp ? "Sign Up" : "Sign In"}
+            </Button>
+          </form>
+
+          <SignUpButton onClick={() => setSignUp((prev) => !prev)}>
+            {signUp ? "Already created?" : "no account?"}
+          </SignUpButton>
+        </LoginWrapper>
+      )}
+    </>
+  );
 };
