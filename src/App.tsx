@@ -3,7 +3,6 @@
 import './App.css';
 import React, { useEffect, useMemo, useState } from "react";
 import { ThemeProvider, createGlobalStyle } from "styled-components";
-import type { DefaultTheme } from 'styled-components/dist/types';
 import { Login } from './components/Login';
 import type { Category, Transaction } from './types/types';
 import { api } from './api/api';
@@ -12,33 +11,7 @@ import SortableTable from './components/SortableTable';
 import CategoryManager from './components/CategoryManager';
 import * as SC from './components/StyledComponents';
 import BudgetInlineEditor from './components/BudgetInlineEditor';
-
-/**
- * Cost Management App (Single-file)
- * Tech: React + TypeScript + styled-components
- *
- * How to use:
- * - Update the BASE_URL and endpoints in `api` to match your backend.
- * - Ensure CORS is allowed on your API.
- */
-
-// ------------------------------
-// THEME & GLOBAL STYLES
-// ------------------------------
-export const theme: DefaultTheme = {
-  bg: "#0f1222",
-  panel: "#171a2e",
-  panelSoft: "#1d2140",
-  text: "#eaeaf2",
-  textDim: "#b3b6d4",
-  primary: "#7c7cff",
-  primaryAccent: "#a3a3ff",
-  danger: "#ff6b6b",
-  success: "#39d98a",
-  warning: "#ffc861",
-  border: "#2a2e4a",
-  shadow: "rgba(0,0,0,0.35)",
-};
+import { theme } from './theme';
 
 const Global = createGlobalStyle`
   * { box-sizing: border-box; }
@@ -53,7 +26,6 @@ const Global = createGlobalStyle`
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  // const [budgets, setBudgets] = useState<Budget[]>([]);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +51,6 @@ const App: React.FC = () => {
 
   // derived maps
   const categoryMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories]);
-  // const budgetByCategory = useMemo(() => Object.fromEntries(budgets.map(b => [b.categoryId, b])), [budgets]);
 
   const totals = useMemo(() => {
     const byCategory = new Map<string, number>();
@@ -390,19 +361,6 @@ const App: React.FC = () => {
               handleAdd={handleAddCategory}
             />
 
-            <SC.Card>
-              <SC.CardHeader>
-                <SC.CardTitle>Transactions</SC.CardTitle>
-              </SC.CardHeader>
-              <SC.CardBody>
-                {txns.length === 0 ? (
-                  <SC.EmptyState>No transactions this month.</SC.EmptyState>
-                ) : (
-                  <SortableTable txns={txns} categoryMap={categoryMap} currency={currency} formatCurrency={formatCurrency} handleDelete={handleDelete} Badge={SC.Badge} Button={SC.Button} />
-                )}
-              </SC.CardBody>
-            </SC.Card>
-
             {/* RIGHT: BUDGETS */}
             <SC.Card>
               <SC.CardHeader>
@@ -442,47 +400,25 @@ const App: React.FC = () => {
                 </div>
               </SC.CardBody>
             </SC.Card>
+
+            <SC.Card>
+              <SC.CardHeader>
+                <SC.CardTitle>Transactions</SC.CardTitle>
+              </SC.CardHeader>
+              <SC.CardBody>
+                {txns.length === 0 ? (
+                  <SC.EmptyState>No transactions this month.</SC.EmptyState>
+                ) : (
+                  <SortableTable txns={txns} categoryMap={categoryMap} currency={currency} formatCurrency={formatCurrency} handleDelete={handleDelete} Badge={SC.Badge} Button={SC.Button} />
+                )}
+              </SC.CardBody>
+            </SC.Card>
+
           </SC.Grid>
         </SC.Container>
       </SC.Shell>
     </ThemeProvider>
   );
 }
+
 export default App;
-
-// ------------------------------
-// INLINE BUDGET EDITOR COMPONENT
-// ------------------------------
-// const BudgetInlineWrap = styled.div`
-//   display: inline-flex; gap: 8px; align-items: center;
-// `;
-
-// const BudgetInput = styled(Input)`
-//   width: 110px;
-// `;
-
-// const BudgetInlineEditor: React.FC<{ initial: number; onSave: (val: number) => void; disabled?: boolean }> = ({ initial, onSave, disabled }) => {
-//   const [editing, setEditing] = useState(false);
-//   const [val, setVal] = useState(String(initial ?? 0));
-
-//   useEffect(() => { setVal(String(initial ?? 0)); }, [initial]);
-
-//   if (!editing) {
-//     return (
-//       <BudgetInlineWrap>
-//         <Button onClick={() => setEditing(true)} disabled={disabled}>Edit Budget</Button>
-//       </BudgetInlineWrap>
-//     );
-//   }
-//   return (
-//     <BudgetInlineWrap>
-//       <BudgetInput type="number" inputMode="numeric" value={val} onChange={e => setVal(e.target.value)} />
-//       <Button
-//         variant="primary"
-//         onClick={() => { onSave(Number(val || 0)); setEditing(false); }}
-//         disabled={disabled}
-//       >Save</Button>
-//       <Button onClick={() => { setVal(String(initial ?? 0)); setEditing(false); }} disabled={disabled}>Cancel</Button>
-//     </BudgetInlineWrap>
-//   );
-// };
