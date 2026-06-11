@@ -14,13 +14,6 @@ export type Transaction = {
   note?: string;
 };
 
-// export type Budget = {
-//   id: string;
-//   categoryId: string;
-//   month: string; // YYYY-MM
-//   amount: number; // monthly budget for that category
-// };
-
 export type SortKey = "date" | "category" | "note" | "amount";
 export type SortOrder = "asc" | "desc";
 

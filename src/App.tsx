@@ -210,7 +210,7 @@ const App: React.FC = () => {
     }
   }
 
-  const currency = "JPY"; // change to your currency code
+  const currency = "JPY";
 
   return (
     <ThemeProvider theme={theme}>
