@@ -1,5 +1,3 @@
-// import reactLogo from './assets/react.svg';
-// import viteLogo from '/vite.svg';
 import './App.css';
 import React, { useEffect, useMemo, useState } from "react";
 import { ThemeProvider, createGlobalStyle } from "styled-components";
@@ -85,7 +83,6 @@ const App: React.FC = () => {
     })()
   }, [authToken]);
 
-  // load initial
   useEffect(() => {
     if (!loggedIn) { return; }
     let mounted = true;
@@ -94,14 +91,11 @@ const App: React.FC = () => {
       try {
         const [cats] = await Promise.all([
           api.getCategories(authToken),
-          // api.getBudgets(authToken, month),
         ]);
         if (!mounted) return;
         setCategories(cats);
-        // setBudgets(bs);
       } catch (e: any) {
         setError(e?.message || "Failed to load");
-        // setError("Failed to load");
       } finally {
         setLoading(false);
       }
@@ -109,7 +103,6 @@ const App: React.FC = () => {
     return () => { mounted = false; };
   }, [month, loggedIn]);
 
-  // load txns per month
   useEffect(() => {
     if (!loggedIn) { return; }
     let mounted = true;
@@ -121,7 +114,6 @@ const App: React.FC = () => {
         setTxns(list);
       } catch (e: any) {
         setError(e?.message || "Failed to load transactions");
-        // setError("Failed to load transactions");
       } finally {
         setLoading(false);
       }
@@ -166,7 +158,6 @@ const App: React.FC = () => {
       setCategories(list);
     } catch (e: any) {
       setError(e?.message || "Failed to add transaction");
-      // setError("Failed to add transaction");
     } finally {
       setLoading(false);
     }
@@ -182,15 +173,12 @@ const App: React.FC = () => {
         categoryId: form.categoryId || categories[0]?.id,
         note: form.note?.trim() || undefined,
       };
-      // const created = await api.createTransaction(payload);
-      // setTxns(prev => [created, ...prev]);
       await api.createTransaction(authToken, payload);
       const list = await api.getTransactions(authToken, fromISO, toISO);
       setTxns(list);
       setForm(f => ({ ...f, amount: "", note: "" }));
     } catch (e: any) {
       setError(e?.message || "Failed to add transaction");
-      // setError("Failed to add transaction");
     } finally {
       setLoading(false);
     }
@@ -204,7 +192,6 @@ const App: React.FC = () => {
       setTxns(prev => prev.filter(t => t.id !== id));
     } catch (e: any) {
       setError(e?.message || "Failed to delete");
-      // setError("Failed to delete");
     } finally {
       setLoading(false);
     }
@@ -214,15 +201,9 @@ const App: React.FC = () => {
     try {
       setLoading(true); setError(null);
       await api.upsertCategoryBudget(authToken, { categoryId, budget });
-      // setBudgets(prev => {
-      //   const idx = prev.findIndex(b => b.categoryId === categoryId && b.month === month);
-      //   if (idx >= 0) { const clone = [...prev]; clone[idx] = saved; return clone; }
-      //   return [saved, ...prev];
-      // });
       const list = await api.getCategories(authToken);
       setCategories(list);
     } catch (e: any) {
-      // setError(e?.message || "Failed to save budget");
       setError("Failed to save budget");
     } finally {
       setLoading(false);
